@@ -1,4 +1,4 @@
-DateParser = module.exports =
+DateParser =
 
   LOCALES:
     'zh-TW': require "./lib/zh-TW"
@@ -8,6 +8,8 @@ DateParser = module.exports =
   locale: (locale) ->
     if @LOCALES[locale]
       @DEFAULT_LOCALE = locale
+      @LOCALES[locale].testStrings?.forEach (s) =>
+        @parse s
     else
       console.error "No such locale: #{locale}"
 
@@ -50,3 +52,7 @@ DateParser = module.exports =
     text = '' unless text
     locale = @DEFAULT_LOCALE unless locale
     return @LOCALES[locale]?.dateExpression2date?(text)
+
+DateParser.locale('zh-TW')
+
+module.exports = DateParser

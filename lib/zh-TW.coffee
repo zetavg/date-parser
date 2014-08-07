@@ -28,12 +28,14 @@ words =
   acquired: '(?:後天|後日)'
   yesterday: '(?:昨天|昨日)'
   the_day_before_yesterday: '(?:前天|前日)'
-  this: '(?:這|今)'
+  this: '(?:這|這個|今)'
   next: '(?:下|下個|明)'
   previous: '(?:上|上個|去|昨)'
   week: '(?:禮拜|星期|週|周)'
   year: '(?:年|/|-)'
+  year_relative: '(?:今年|去年|明年)'
   month: '(?:月|/|-)'
+  month_relative: '(?:這個月|上個月|下個月)'
   day: '(?:日|號|/|-)'
   to: '(?:到|－|-|~)'
   event_prefix: '(?:有|舉辦|舉行|要|的)'
@@ -46,11 +48,14 @@ words.pm = "(?:#{words.noon}|#{words.afternoon}|#{words.night})"
 words.this_previous_next = "(?:#{words.this}|#{words.previous}|#{words.next})"
 words.dayPeriods = "(?:#{words.morning}|#{words.noon}|#{words.afternoon}|#{words.night}|#{words.midnight})"
 words.time = "(?:#{words.numbers}+#{words.hour}(?:#{words.numbers}+)?(?:#{words.minute})?(?:#{words.numbers}+)?(?:#{words.second})?)"
-words.dayTime = "(?:(?:(?:#{words.dayPeriods})?#{words.interjection}?(?:#{words.time}))|(?:#{words.dayPeriods}))"
-words.date = "(?:(?:(?:(?:#{words.numbers}+|#{words.this_previous_next}) ?#{words.year})? ?(?:#{words.numbers}+||#{words.interjection}#{words.this_previous_next}) ?#{words.month})? ?(?:(?:#{words.numbers}+) ?#{words.day}?))"
+words.like_time = "(?:#{words.numbers}+(?:#{words.numbers}|#{words.hour}|#{words.minute}|#{words.second}){1,12})"
+words.dayTime = "(?:(?:#{words.dayPeriods}?#{words.interjection}?#{words.like_time}) ?#{words.dayPeriods}?|#{words.dayPeriods})"
+words.year_month_day = "(?:#{words.year}|#{words.month}|#{words.day}|#{words.year_relative}|#{words.month_relative})"
+words.date = "(?:(?:(?:(?:#{words.numbers}{1,4}|#{words.this_previous_next}) ?#{words.year})? ?(?:#{words.numbers}{1,3}|#{words.this_previous_next}) ?#{words.month})? ?#{words.numbers}{1,3} ?#{words.day}?)"
+words.like_date = "(?:(?:#{words.numbers}|#{words.year_month_day}){1,12}#{words.year_month_day}#{words.numbers}{0,3})"
 words.weekdays = "(?:#{words.zero}|#{words.one}|#{words.two}|#{words.three}|#{words.four}|#{words.five}|#{words.six}|#{words.seven}|#{words.sun})"
 words.weekExpression = "(?:#{words.this_previous_next}?#{words.week}#{words.weekdays})"
-words.dateExpression = "(?:#{words.date}|#{words.weekExpression}|#{words.today}|#{words.tomorrow}|#{words.acquired}|#{words.yesterday}|#{words.the_day_before_yesterday})"
+words.dateExpression = "(?:#{words.like_date}|#{words.weekExpression}|#{words.today}|#{words.tomorrow}|#{words.acquired}|#{words.yesterday}|#{words.the_day_before_yesterday})"
 words.separators = "(?:#{words.event_prefix}|#{words.event_postfix})"
 
 number2integer = (number) ->
@@ -118,9 +123,9 @@ time2object = (time) ->
 
 dayTime2date = (daytime, date) ->
   return null if not daytime
-  if match = daytime.match RegExp("(?:(?:(#{words.dayPeriods})?#{words.interjection}?(#{words.time}))|(#{words.dayPeriods}))")
-    if period = match[3]
-      date = (date and new Date(date)) || new Date()
+  if match = daytime.match RegExp("(?:(?:(#{words.dayPeriods})?#{words.interjection}?(#{words.time}) ?(#{words.dayPeriods})?)|(#{words.dayPeriods}))")
+    if period = match[4]
+      date = (date and new Date(date?.getTime())) || new Date()
       # date.endTime = date?.endTime || new Date()
       date.setMinutes(0)
       date.setSeconds(0)
@@ -143,11 +148,11 @@ dayTime2date = (daytime, date) ->
         # date.endTime.setHours(4)
       return date
     else
-      period = match[1] or ''
+      period = match[1] or match[3] or ''
       time = time2object(match[2])
       return null if not time
       time.hour += 12 if period.match(RegExp(words.pm)) and time.hour < 12
-      date = date || new Date()
+      date = (date and new Date(date?.getTime())) || new Date()
       if time.hour < 12 and not period
         time.hour += 12 if time.hour > (date.getHours() - 12) and time.hour < (date.getHours())
       date.setHours(time.hour)
@@ -218,7 +223,7 @@ dateExpression2date = (dateExp) ->
     diff = day - date.getDay()
     date.setDate date.getDate() + diff
     return date
-  else if match = dateExp.match RegExp(words.date)
+  else if match = dateExp.match RegExp(words.like_date)
     theDate = date2object(match[0])
     return null unless theDate
     date.setDate(theDate.day) if theDate.day
@@ -231,7 +236,7 @@ expressions = []
 
 # 「<事件> 時間後 <在...> <事件>」
 expressions.push (text) ->
-  if match = text.match RegExp("(?:([^#{words.separators}]+) ?#{words.event_postfix} ?)?(#{words.time})#{words.after} ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?")
+  if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix} ?)?(#{words.time})#{words.after} ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?$")
     time = time2object(match[2])
     location = match[3]
     eventName = match[1] or match[4]
@@ -243,11 +248,25 @@ expressions.push (text) ->
     date.eventName = eventName if eventName
     return date
 
-# 「<事件> <日期> 時間 <到 時間> <在...> <事件>」
+# 「<事件> 日期 <時間> 到 日期 <時間> <在...> <事件>」
 expressions.push (text) ->
-  if match = text.match RegExp("(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(?:(#{words.dateExpression}))? ?(#{words.dayTime}) ?(?:#{words.to} ?(#{words.dayTime}) ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?")
+  if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dateExpression}) ?(#{words.dayTime})? ?(?:#{words.to} ?(#{words.dateExpression}) ?(#{words.dayTime})? ?) ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?$")
     date = dateExpression2date(match[2]) or new Date()
-    time = dayTime2date(match[3], date)
+    date = (dayTime2date(match[3], date) if match[3]) or date
+    endTime = dateExpression2date(match[4])
+    endTime = dayTime2date(match[5], endTime) if endTime and match[5]
+    location = match[6]
+    eventName = match[1] or match[7]
+    date.location = location if location
+    date.eventName = eventName if eventName
+    date.endTime = endTime if endTime
+    return date
+
+# 「<事件> 日期 時間 <到 時間> <在...> <事件>」
+expressions.push (text) ->
+  if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(?:(#{words.dateExpression})) ?(#{words.dayTime}) ?(?:#{words.to} ?(#{words.dayTime}) ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?$")
+    date = dateExpression2date(match[2]) or new Date()
+    date = dayTime2date(match[3], date) if match[3]
     endTime = dayTime2date(match[4], date)
     location = match[5]
     eventName = match[1] or match[6]
@@ -256,9 +275,21 @@ expressions.push (text) ->
     date.endTime = endTime if endTime
     return date
 
+# 「<事件> 時間 <到 時間> <在...> <事件>」
+expressions.push (text) ->
+  if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dayTime}) ?(?:#{words.to} ?(#{words.dayTime}) ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?$")
+    date = dayTime2date(match[2]) if match[2]
+    endTime = dayTime2date(match[3], date)
+    location = match[4]
+    eventName = match[1] or match[5]
+    date.location = location if location
+    date.eventName = eventName if eventName
+    date.endTime = endTime if endTime
+    return date
+
 # 「<事件> 日期 <時間> <到 日期 <時間>> <在...> <事件>」
 expressions.push (text) ->
-  if match = text.match RegExp("(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dateExpression}) ?(#{words.dayTime})? ?(?:#{words.to} ? (#{words.dateExpression}) ?(#{words.dayTime})? ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?")
+  if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dateExpression}) ?(#{words.dayTime})? ?(?:#{words.to} ? (#{words.dateExpression}) ?(#{words.dayTime})? ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?$")
     date = dateExpression2date(match[2]) or new Date()
     time = dayTime2date(match[3], date)
     endTime = dateExpression2date(match[5])
@@ -278,3 +309,4 @@ module.exports =
   dayTime2date: dayTime2date
   date2object: date2object
   dateExpression2date: dateExpression2date
+  testStrings: ['明天晚上到下禮拜六早上要開會', '10月10號 早上 10:00 ~ 下午 4:00', '十月十號']

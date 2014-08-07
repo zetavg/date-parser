@@ -2,14 +2,20 @@
 (function() {
   var DateParser;
 
-  DateParser = module.exports = {
+  DateParser = {
     LOCALES: {
       'zh-TW': require("./lib/zh-TW")
     },
     DEFAULT_LOCALE: 'zh-TW',
     locale: function(locale) {
+      var _ref;
       if (this.LOCALES[locale]) {
-        return this.DEFAULT_LOCALE = locale;
+        this.DEFAULT_LOCALE = locale;
+        return (_ref = this.LOCALES[locale].testStrings) != null ? _ref.forEach((function(_this) {
+          return function(s) {
+            return _this.parse(s);
+          };
+        })(this)) : void 0;
       } else {
         return console.error("No such locale: " + locale);
       }
@@ -93,5 +99,9 @@
       return (_ref = this.LOCALES[locale]) != null ? typeof _ref.dateExpression2date === "function" ? _ref.dateExpression2date(text) : void 0 : void 0;
     }
   };
+
+  DateParser.locale('zh-TW');
+
+  module.exports = DateParser;
 
 }).call(this);
