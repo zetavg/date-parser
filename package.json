@@ -1,6 +1,6 @@
 {
   "name": "date-parser",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "description": "將口語的日期時間解析成 Date 物件。",
   "main": "date-parser.js",
   "scripts": {
@@ -11,10 +11,11 @@
   "license": "MIT",
   "dependencies": {
     "browserify": "^6.2.0",
+    "moment-timezone": "^0.2.4",
     "uglify-js": "^2.4.15"
   },
-  "repository" : {
-     "type" : "git",
-     "url" : "https://github.com/Neson/date-parser.git"
-   }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Neson/date-parser.git"
+  }
 }

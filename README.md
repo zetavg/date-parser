@@ -26,12 +26,13 @@ Select the default locale with:
 
 ```js
 dateParser.locale('zh-TW');
+dateParser.timezone('Asia/Taipei');
 ```
 
 Or just specify it on the go:
 
 ```js
-dateParser.parse('二零一四年五月五日', 'zh-TW');
+dateParser.parse('二零一四年五月五日', 'Asia/Taipei', 'zh-TW');
 ```
 
 ### Datetime Parse

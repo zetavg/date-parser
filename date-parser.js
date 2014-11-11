@@ -7,6 +7,7 @@
       'zh-TW': require("./lib/zh-TW")
     },
     DEFAULT_LOCALE: 'zh-TW',
+    DEFAULT_TIMEZONE: 'Asia/Taipei',
     locale: function(locale) {
       var _ref;
       if (this.LOCALES[locale]) {
@@ -20,13 +21,20 @@
         return console.error("No such locale: " + locale);
       }
     },
-    parse: function(text, locale) {
-      var error, expression, expressions, result, _i, _len, _ref, _ref1;
+    timezone: function(timezone) {
+      var DEFAULT_TIMEZONE;
+      return DEFAULT_TIMEZONE = parseInt(timezone);
+    },
+    parse: function(text, timezone, locale) {
+      var expression, expressions, result, _i, _len, _ref, _ref1;
       if (!text) {
         text = '';
       }
       if (!locale) {
         locale = this.DEFAULT_LOCALE;
+      }
+      if (!timezone) {
+        timezone = this.DEFAULT_TIMEZONE;
       }
       expressions = (_ref = this.LOCALES[locale]) != null ? _ref.expressions : void 0;
       if (!expressions) {
@@ -36,14 +44,9 @@
       _ref1 = this.LOCALES[locale].expressions;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         expression = _ref1[_i];
-        try {
-          result = expression(text);
-          if (result) {
-            return result;
-          }
-        } catch (_error) {
-          error = _error;
-          console.error('error', error);
+        result = expression(text, timezone);
+        if (result) {
+          return result;
         }
       }
       return null;
@@ -68,7 +71,7 @@
       }
       return (_ref = this.LOCALES[locale]) != null ? typeof _ref.time2object === "function" ? _ref.time2object(text) : void 0 : void 0;
     },
-    dayTime2date: function(text, locale) {
+    dayTime2moment: function(text, locale) {
       var _ref;
       if (!text) {
         text = '';
@@ -76,7 +79,7 @@
       if (!locale) {
         locale = this.DEFAULT_LOCALE;
       }
-      return (_ref = this.LOCALES[locale]) != null ? typeof _ref.dayTime2date === "function" ? _ref.dayTime2date(text) : void 0 : void 0;
+      return (_ref = this.LOCALES[locale]) != null ? typeof _ref.dayTime2moment === "function" ? _ref.dayTime2moment(text) : void 0 : void 0;
     },
     date2object: function(text, locale) {
       var _ref;
@@ -88,7 +91,7 @@
       }
       return (_ref = this.LOCALES[locale]) != null ? typeof _ref.date2object === "function" ? _ref.date2object(text) : void 0 : void 0;
     },
-    dateExpression2date: function(text, locale) {
+    dateExpression2moment: function(text, locale) {
       var _ref;
       if (!text) {
         text = '';
@@ -96,7 +99,7 @@
       if (!locale) {
         locale = this.DEFAULT_LOCALE;
       }
-      return (_ref = this.LOCALES[locale]) != null ? typeof _ref.dateExpression2date === "function" ? _ref.dateExpression2date(text) : void 0 : void 0;
+      return (_ref = this.LOCALES[locale]) != null ? typeof _ref.dateExpression2moment === "function" ? _ref.dateExpression2moment(text) : void 0 : void 0;
     }
   };
 
