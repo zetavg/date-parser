@@ -1,7 +1,7 @@
 {
   "name": "date-parser",
-  "version": "0.0.1",
-  "description": "將口語日期時間轉換成 Date 物件",
+  "version": "0.0.2",
+  "description": "將口語的日期時間解析成 Date 物件。",
   "main": "date-parser.js",
   "scripts": {
     "build-js": "coffee -c lib ; coffee -c date-parser.coffee ; coffee -c date-parser-browserify.coffee && browserify date-parser-browserify.js | uglifyjs > script/date-parser.min.js",
@@ -12,5 +12,9 @@
   "dependencies": {
     "browserify": "^6.2.0",
     "uglify-js": "^2.4.15"
-  }
+  },
+  "repository" : {
+     "type" : "git",
+     "url" : "https://github.com/Neson/date-parser.git"
+   }
 }
