@@ -13,6 +13,7 @@ words =
   nine: '(?:九|９|9)'
   ten: '十'
   half: '半'
+  end: '末'
   dot: '(?:\.|點|:|：)'
   hour: '(?:時|小時|點|:|：)'
   minute: '(?:分|分鐘|:|：)'
@@ -41,8 +42,10 @@ words =
   event_prefix: '(?:有|舉辦|舉行|要|的|，| )'
   event_postfix: '(?:在|，| )'
   interjection: '(?:個|的|，| )'
+  unit: '(?:個)'
 
-words.numbers = "(?:#{words.zero}|#{words.one}|#{words.two}|#{words.three}|#{words.four}|#{words.five}|#{words.six}|#{words.seven}|#{words.eight}|#{words.nine}|#{words.ten}|#{words.half})"
+words.numbers = "(?:#{words.zero}|#{words.one}|#{words.two}|#{words.three}|#{words.four}|#{words.five}|#{words.six}|#{words.seven}|#{words.eight}|#{words.nine}|#{words.ten}|#{words.half}|#{words.unit})"
+words.zero_to_nine = "(?:#{words.zero}|#{words.one}|#{words.two}|#{words.three}|#{words.four}|#{words.five}|#{words.six}|#{words.seven}|#{words.eight}|#{words.nine})"
 words.am = "(?:#{words.midnight}|#{words.morning})"
 words.pm = "(?:#{words.noon}|#{words.afternoon}|#{words.night})"
 words.this_previous_next = "(?:#{words.this}|#{words.previous}|#{words.next})"
@@ -53,24 +56,26 @@ words.dayTime = "(?:(?:#{words.dayPeriods}?#{words.interjection}?#{words.like_ti
 words.year_month_day = "(?:#{words.year}|#{words.month}|#{words.day}|#{words.year_relative}|#{words.month_relative})"
 words.date = "(?:(?:(?:(?:#{words.numbers}{1,4}|#{words.this_previous_next}) ?#{words.year})? ?(?:#{words.numbers}{1,3}|#{words.this_previous_next}) ?#{words.month})? ?#{words.numbers}{1,3} ?#{words.day}?)"
 words.like_date = "(?:(?:#{words.numbers}|#{words.year_month_day}){1,12}#{words.year_month_day}#{words.numbers}{0,3})"
-words.weekdays = "(?:#{words.zero}|#{words.one}|#{words.two}|#{words.three}|#{words.four}|#{words.five}|#{words.six}|#{words.seven}|#{words.sun})"
+words.weekdays = "(?:#{words.zero}|#{words.one}|#{words.two}|#{words.three}|#{words.four}|#{words.five}|#{words.six}|#{words.seven}|#{words.sun}|#{words.end})"
 words.weekExpression = "(?:#{words.this_previous_next}?#{words.week}#{words.weekdays})"
 words.dateExpression = "(?:#{words.like_date}|#{words.weekExpression}|#{words.today}|#{words.tomorrow}|#{words.acquired}|#{words.yesterday}|#{words.the_day_before_yesterday})"
 words.separators = "(?:#{words.event_prefix}|#{words.event_postfix})"
 
 number2integer = (number) ->
   return null if not number
-  if number.match RegExp(words.half)
-    return 30
-  else if match = number.match RegExp("(#{words.numbers})(#{words.numbers})(#{words.numbers})(#{words.numbers})")
+  if match = number.match RegExp("(#{words.zero_to_nine})(#{words.zero_to_nine})(#{words.zero_to_nine})(#{words.zero_to_nine})")
     return number2integer(match[1])*1000 + number2integer(match[2])*100 + number2integer(match[3])*10 + number2integer(match[4])
-  else if match = number.match RegExp("(#{words.numbers})(#{words.ten})?(#{words.numbers})")
+  else if match = number.match RegExp("(#{words.zero_to_nine})(#{words.ten})?(#{words.zero_to_nine})#{words.unit}?")
     if match[1] == words.ten
       return number2integer(match[3]) + 10
     else
       n = number2integer(match[3])
       n = 0 if n >= 10
       return number2integer(match[1])*10 + n
+  else if match = number.match RegExp("(#{words.numbers}+)#{words.unit}#{words.half}")
+    return number2integer(match[1]) + 0.5
+  else if number.match RegExp(words.half)
+    return 0.5
   else if number.match RegExp(words.zero)
     return 0
   else if number.match RegExp(words.one)
@@ -107,6 +112,9 @@ time2object = (time) ->
     if hour == 30
       hour = 0
       minute += 30
+    if (f = hour % 1) > 0
+      hour -= f
+      minute += 30
     while second > 60
       second -= 60
       minute += 1
@@ -126,26 +134,26 @@ dayTime2date = (daytime, date) ->
   if match = daytime.match RegExp("(?:(?:(#{words.dayPeriods})?#{words.interjection}?(#{words.time}) ?(#{words.dayPeriods})?)|(#{words.dayPeriods}))")
     if period = match[4]
       date = (date and new Date(date?.getTime())) || new Date()
-      # date.endTime = date?.endTime || new Date()
+      date.endTime = date?.endTime or (date and new Date(date?.getTime())) or new Date()
       date.setMinutes(0)
       date.setSeconds(0)
-      # date.endTime.setMinutes(0)
-      # date.endTime.setSeconds(0)
+      date.endTime.setMinutes(0)
+      date.endTime.setSeconds(0)
       if period.match RegExp(words.morning)
         date.setHours(9)
-        # date.endTime.setHours(11)
+        date.endTime.setHours(11)
       else if period.match RegExp(words.noon)
         date.setHours(12)
-        # date.endTime.setHours(13)
+        date.endTime.setHours(13)
       else if period.match RegExp(words.afternoon)
         date.setHours(14)
-        # date.endTime.setHours(16)
+        date.endTime.setHours(16)
       else if period.match RegExp(words.night)
         date.setHours(18)
-        # date.endTime.setHours(20)
+        date.endTime.setHours(20)
       else if period.match RegExp(words.midnight)
         date.setHours(0)
-        # date.endTime.setHours(4)
+        date.endTime.setHours(4)
       return date
     else
       period = match[1] or match[3] or ''
@@ -219,9 +227,14 @@ dateExpression2date = (dateExp) ->
     else if match[1]?.match RegExp(words.next)
       date.setDate date.getDate() + 7
     day = number2integer(match[2])
+    if match[2].match RegExp(words.end)
+      day = 6
     day = 0 if day >= 7
     diff = day - date.getDay()
     date.setDate date.getDate() + diff
+    if match[2].match RegExp(words.end)
+      date.endTime = new Date(date?.getTime())
+      date.endTime.setDate date.getDate() + 1
     return date
   else if match = dateExp.match RegExp(words.like_date)
     theDate = date2object(match[0])
