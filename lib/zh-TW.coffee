@@ -133,7 +133,7 @@ dayTime2date = (daytime, date) ->
   return null if not daytime
   if match = daytime.match RegExp("(?:(?:(#{words.dayPeriods})?#{words.interjection}?(#{words.time}) ?(#{words.dayPeriods})?)|(#{words.dayPeriods}))")
     if period = match[4]
-      date = (date and new Date(date?.getTime())) || new Date()
+      date = date or new Date()
       date.endTime = date?.endTime or (date and new Date(date?.getTime())) or new Date()
       date.setMinutes(0)
       date.setSeconds(0)
@@ -265,14 +265,21 @@ expressions.push (text) ->
 expressions.push (text) ->
   if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dateExpression}) ?(#{words.dayTime})? ?(?:#{words.to} ?(#{words.dateExpression}) ?(#{words.dayTime})? ?) ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?$")
     date = dateExpression2date(match[2]) or new Date()
-    date = (dayTime2date(match[3], date) if match[3]) or date
+    date = dayTime2date(match[3], date) if match[3]
+    if not match[3] and not match[5]
+      date.fullDay = true
     endTime = dateExpression2date(match[4])
-    endTime = dayTime2date(match[5], endTime) if endTime and match[5]
+    if match[5] and endTime
+      endTime = dayTime2date(match[5], endTime)
     location = match[6]
     eventName = match[1] or match[7]
     date.location = location if location
     date.eventName = eventName if eventName
     date.endTime = endTime if endTime
+    if date.endTime and not match[5]
+      date.endTime.setHours(23)
+      date.endTime.setMinutes(59)
+      date.endTime.setSeconds(59)
     return date
 
 # 「<事件> 日期 時間 <到 時間> <在...> <事件>」
@@ -304,14 +311,21 @@ expressions.push (text) ->
 expressions.push (text) ->
   if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dateExpression}) ?(#{words.dayTime})? ?(?:#{words.to} ? (#{words.dateExpression}) ?(#{words.dayTime})? ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.interjection}?([^#{words.separators}]+))?$")
     date = dateExpression2date(match[2]) or new Date()
-    time = dayTime2date(match[3], date)
+    time = dayTime2date(match[3], date) if match[3]
+    if not match[3] and not match[5]
+      date.fullDay = true
     endTime = dateExpression2date(match[5])
-    endTime = dayTime2date(match[5], endTime) if match[5]
+    if match[5] and endTime
+      endTime = dayTime2date(match[5], endTime)
     location = match[6]
     eventName = match[1] or match[7]
     date.location = location if location
     date.eventName = eventName if eventName
     date.endTime = endTime if endTime
+    if date.endTime and not match[5]
+      date.endTime.setHours(23)
+      date.endTime.setMinutes(59)
+      date.endTime.setSeconds(59)
     return date
 
 module.exports =

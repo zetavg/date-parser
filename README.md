@@ -20,6 +20,22 @@ $ node
 
 ## Usage
 
+### I18n
+
+Select the default locale with:
+
+```js
+dateParser.locale('zh-TW');
+```
+
+Or just specify it on the go:
+
+```js
+dateParser.parse('二零一四年五月五日', 'zh-TW');
+```
+
+### Datetime Parse
+
 The date-parser can parse any kind of spoken datetime into an Data object:
 
 ```js
@@ -32,8 +48,8 @@ dateParser.parse('今天中午');  // -> (Today!) 12:00:00 GMT+0800 (CST)
 You can just say an incomplete sentence, the parser will smartly guesses what you want:
 
 ```js
-dateParser.parse('今天中午');  // -> (Today!) 12:00:00 GMT+0800 (CST)
 dateParser.parse('中午');  // -> (Today!) 12:00:00 GMT+0800 (CST)
+dateParser.parse('今晚');  // -> (Today!) 18:00:00 GMT+0800 (CST)
 dateParser.parse('三點半');  // -> (Today!) 15:30:00 GMT+0800 (CST) (or 03:30:00, depends on current time)
 dateParser.parse('五月五');  // -> ... May 05 ... 00:00:00 GMT+0800 (CST)
 dateParser.parse('星期五晚上');  // -> Fri ... 18:00:00 GMT+0800 (CST)
@@ -44,6 +60,7 @@ Relative datetime is supported too.
 ```js
 dateParser.parse('下星期五晚上');  // -> Fri ... 18:00:00 GMT+0800 (CST)
 dateParser.parse('兩小時後');  // -> ...
+dateParser.parse('這週末');  // -> ...
 dateParser.parse('明天凌晨三點');  // -> (Tomorrow!) 03:00:00 GMT+0800 (CST)
 dateParser.parse('明年一月一號');  // -> ... Jan 01 ... 00:00:00 GMT+0800 (CST)
 ```

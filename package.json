@@ -1,6 +1,6 @@
 {
   "name": "date-parser",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "將口語的日期時間解析成 Date 物件。",
   "main": "date-parser.js",
   "scripts": {
