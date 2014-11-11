@@ -15,20 +15,23 @@ DateParser =
       console.error "No such locale: #{locale}"
 
   timezone: (timezone) ->
-    DEFAULT_TIMEZONE = parseInt(timezone)
+    @DEFAULT_TIMEZONE = timezone
 
   parse: (text, timezone, locale) ->
     text = '' unless text
     locale = @DEFAULT_LOCALE unless locale
     timezone = @DEFAULT_TIMEZONE unless timezone
     expressions = @LOCALES[locale]?.expressions
+    text = text.replace(RegExp(@LOCALES[locale]?.words?.interjections, 'g'), '') if @LOCALES[locale]?.words?.interjections
     if not expressions
       console.error "No such locale: #{locale}"
       return null
     for expression in @LOCALES[locale].expressions
-
-      result = expression(text, timezone)
-      return result if result
+      try
+        result = expression(text, timezone)
+        return result if result
+      catch error
+        console.error 'error', error
     return null
 
   number2integer: (text, locale) ->

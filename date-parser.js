@@ -22,11 +22,10 @@
       }
     },
     timezone: function(timezone) {
-      var DEFAULT_TIMEZONE;
-      return DEFAULT_TIMEZONE = parseInt(timezone);
+      return this.DEFAULT_TIMEZONE = timezone;
     },
     parse: function(text, timezone, locale) {
-      var expression, expressions, result, _i, _len, _ref, _ref1;
+      var error, expression, expressions, result, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       if (!text) {
         text = '';
       }
@@ -37,16 +36,24 @@
         timezone = this.DEFAULT_TIMEZONE;
       }
       expressions = (_ref = this.LOCALES[locale]) != null ? _ref.expressions : void 0;
+      if ((_ref1 = this.LOCALES[locale]) != null ? (_ref2 = _ref1.words) != null ? _ref2.interjections : void 0 : void 0) {
+        text = text.replace(RegExp((_ref3 = this.LOCALES[locale]) != null ? (_ref4 = _ref3.words) != null ? _ref4.interjections : void 0 : void 0, 'g'), '');
+      }
       if (!expressions) {
         console.error("No such locale: " + locale);
         return null;
       }
-      _ref1 = this.LOCALES[locale].expressions;
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        expression = _ref1[_i];
-        result = expression(text, timezone);
-        if (result) {
-          return result;
+      _ref5 = this.LOCALES[locale].expressions;
+      for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+        expression = _ref5[_i];
+        try {
+          result = expression(text, timezone);
+          if (result) {
+            return result;
+          }
+        } catch (_error) {
+          error = _error;
+          console.error('error', error);
         }
       }
       return null;

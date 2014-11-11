@@ -1,11 +1,12 @@
 {
   "name": "date-parser",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "將口語的日期時間解析成 Date 物件。",
   "main": "date-parser.js",
   "scripts": {
     "build-js": "coffee -c lib ; coffee -c date-parser.coffee ; coffee -c date-parser-browserify.coffee && browserify date-parser-browserify.js | uglifyjs > script/date-parser.min.js",
-    "clean": "rm *.js ; rm lib/*.js"
+    "clean": "rm *.js ; rm lib/*.js",
+    "test": "mocha --compilers coffee:coffee-script/register"
   },
   "author": "Neson",
   "license": "MIT",
@@ -17,5 +18,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Neson/date-parser.git"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.8.0",
+    "mocha": "^2.0.1"
   }
 }
