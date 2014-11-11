@@ -1,6 +1,8 @@
 # date-parser
 
-Turn spoken datetime into Date object. Only Traditional Chinese is supported now.
+[![Build Status](https://travis-ci.org/Neson/date-parser.svg?branch=master)](https://travis-ci.org/Neson/date-parser) [![npm version](https://badge.fury.io/js/date-parser.svg)](http://badge.fury.io/js/date-parser)
+
+Parses spoken datetime sentence into an Date object. Only Traditional Chinese is supported now.
 
 ## Installation
 
