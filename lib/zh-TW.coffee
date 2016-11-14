@@ -233,6 +233,9 @@ dateExpression2moment = (dateExp, timezone) ->
     day = number2integer(match[2])
     if match[2].match RegExp(words.end)
       day = 6
+    
+    moment.date moment.date() + 7 if day == 7
+    
     day = 0 if day >= 7
     moment.day day
     if match[2].match RegExp(words.end)
@@ -240,7 +243,9 @@ dateExpression2moment = (dateExp, timezone) ->
       moment.endMoment.date moment.date() + 1
     return moment
   else if match = dateExp.match RegExp(words.like_date)
+    console.log "here"
     dateObj = date2object(match[0])
+    console.log dateObj
     return null unless dateObj
     moment.date(dateObj.day) if dateObj.day
     moment.month(dateObj.month - 1) if dateObj.month

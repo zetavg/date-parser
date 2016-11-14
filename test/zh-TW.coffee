@@ -166,6 +166,20 @@ describe "dateParser_zh-TW", ->
         Moment.tz(timezone).add(1, 'week').day(3).hour(18).minute(17).second(0).unix()
       )
 
+    it "should recognize 下禮拜天", ->
+      assert.equal(
+        dateToUnix dateParser.parse '下禮拜天', timezone
+        Moment.tz(timezone).add(1, 'week').day(7).hour(0).minute(0).second(0).unix()
+      )
+
+    it "should recognize 10/23", ->
+      console.log Moment.tz(timezone).month(9).date(23).hour(0).minute(0).second(0)
+      console.log dateParser.parse '10/23'
+      assert.equal(
+        dateToUnix dateParser.parse '10/23', timezone
+        Moment.tz(timezone).month(9).date(23).hour(0).minute(0).second(0).unix()
+      )
+
     it "should recognize 明年1/1 凌晨一點", ->
       assert.equal(
         dateToUnix dateParser.parse '明年1/1 凌晨一點', timezone
