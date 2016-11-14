@@ -233,6 +233,7 @@ dateExpression2moment = (dateExp, timezone) ->
     day = number2integer(match[2])
     if match[2].match RegExp(words.end)
       day = 6
+    moment.date moment.date() + 7 if day == 7
     day = 0 if day >= 7
     moment.day day
     if match[2].match RegExp(words.end)
