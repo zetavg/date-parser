@@ -172,10 +172,10 @@ describe "dateParser_zh-TW", ->
         Moment.tz(timezone).add(1, 'week').day(7).hour(0).minute(0).second(0).unix()
       )
 
-    it "should recognize 10/23", ->
+    it "should recognize 10/33", ->
       assert.equal(
-        dateToUnix dateParser.parse '10/23', timezone
-        Moment.tz(timezone).month(9).date(23).hour(0).minute(0).second(0).unix()
+        dateToUnix dateParser.parse '10/40', timezone
+        Moment.tz(timezone).month(9).date(10).hour(0).minute(0).second(0).unix()
       )
 
     it "should recognize 明年1/1 凌晨一點", ->

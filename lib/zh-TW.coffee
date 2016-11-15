@@ -297,6 +297,7 @@ expressions.push (text, timezone) ->
     moment.endMoment = dayTime2moment(match[4], timezone, Moment(moment)) if match[4]
     location = match[5]
     eventName = match[1] or match[6]
+    return null if !moment
     date = moment.toDate()
     date.location = location if location
     date.eventName = eventName if eventName
