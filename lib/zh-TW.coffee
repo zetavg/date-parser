@@ -195,7 +195,7 @@ date2object = (date) ->
       year = now.year() - 1
     else if match[1]?.match RegExp(words.next)
       year = now.year() + 1
-    
+
     if match[2]?.match RegExp(words.this)
       month = now.month() + 1
     else if match[2]?.match RegExp(words.previous)
@@ -203,7 +203,6 @@ date2object = (date) ->
     else if match[2]?.match RegExp(words.next)
       month = now.month() + 2
 
-    
     dayLimit = dayInMonth[month - 1]
     dayLimit += 1 if month == 2 and year % 4 == 0
     return null if not day or day > dayLimit
