@@ -9,24 +9,30 @@ describe "dateParser_zh-TW", ->
   describe "inTaipei", ->
     timezone = 'Asia/Taipei'
 
-    it "should recognize error input 11/32", ->
+    it "should not recognize error input 11/32", ->
       assert.equal(
         dateParser.parse '11/32'
         null
       )
-    it "should recognize error input 31/1", ->
+    it "should not recognize error input 31/1", ->
       assert.equal(
         dateParser.parse '31/1'
         null
       )
-    it "should recognize error input 星期八", ->
+    it "should not recognize error input 星期八", ->
       assert.equal(
         dateParser.parse '星期八'
         null
       )
-    it "should recognize 10/33", ->
+    it "should not recognize 10/33", ->
       assert.equal(
         dateParser.parse '10/33'
+        null
+      )
+
+    it "should not recognize 123/12", ->
+      assert.equal(
+        dateParser.parse '12a/12'
         null
       )
 
