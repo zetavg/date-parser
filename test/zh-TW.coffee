@@ -9,6 +9,33 @@ describe "dateParser_zh-TW", ->
   describe "inTaipei", ->
     timezone = 'Asia/Taipei'
 
+    it "should not recognize error input 11/32", ->
+      assert.equal(
+        dateParser.parse '11/32'
+        null
+      )
+    it "should not recognize error input 31/1", ->
+      assert.equal(
+        dateParser.parse '31/1'
+        null
+      )
+    it "should not recognize error input 星期八", ->
+      assert.equal(
+        dateParser.parse '星期八'
+        null
+      )
+    it "should not recognize 10/33", ->
+      assert.equal(
+        dateParser.parse '10/33'
+        null
+      )
+
+    it "should not recognize 123/12", ->
+      assert.equal(
+        dateParser.parse '12a/12'
+        null
+      )
+
     it "should recognize 今天", ->
       assert.equal(
         dateToUnix dateParser.parse '今天', timezone
@@ -164,6 +191,12 @@ describe "dateParser_zh-TW", ->
       assert.equal(
         dateToUnix dateParser.parse('下禮拜三 4:32pm ~ 6:17pm', timezone).endTime
         Moment.tz(timezone).add(1, 'week').day(3).hour(18).minute(17).second(0).unix()
+      )
+
+    it "should recognize 下禮拜天", ->
+      assert.equal(
+        dateToUnix dateParser.parse '下禮拜天', timezone
+        Moment.tz(timezone).add(1, 'week').day(7).hour(0).minute(0).second(0).unix()
       )
 
     it "should recognize 明年1/1 凌晨一點", ->
