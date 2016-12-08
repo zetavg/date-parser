@@ -48,6 +48,7 @@
         expression = ref5[i];
         try {
           result = expression(text, timezone);
+          console.log(result);
           if (result) {
             return result;
           }

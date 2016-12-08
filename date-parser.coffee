@@ -29,6 +29,7 @@ DateParser =
     for expression in @LOCALES[locale].expressions
       try
         result = expression(text, timezone)
+        console.log result
         return result if result
       catch error
         console.error 'error', error

@@ -57,8 +57,8 @@ words.time = "(?:#{words.numbers}+#{words.hour}(?:#{words.numbers}+)?(?:#{words.
 words.like_time = "(?:#{words.numbers}+(?:#{words.numbers}|#{words.hour}|#{words.minute}|#{words.second}){1,12})"
 words.dayTime = "(?:(?:#{words.dayPeriods}?#{words.separator}?#{words.like_time}) ?#{words.dayPeriods}?|#{words.dayPeriods})"
 words.year_month_day = "(?:#{words.year}|#{words.month}|#{words.day}|#{words.year_relative}|#{words.month_relative})"
-words.date = "(?:(?:(?:(?:#{words.numbers}{1,4}|#{words.this_previous_next}) ?#{words.year})? ?(?:#{words.numbers}{1,3}|#{words.this_previous_next}) ?#{words.month})? ?#{words.numbers}{1,3} ?#{words.day}?)"
-words.like_date = "(?:(?:#{words.numbers}|#{words.year_month_day}){1,12}#{words.year_month_day}#{words.numbers}{0,3})"
+words.date = "(?:(?:(?:(?:#{words.numbers}{1,4}|#{words.this_previous_next}) ?#{words.year})? ?(?:#{words.numbers}{1,2}|#{words.this_previous_next}) ?#{words.month})? ?#{words.numbers}{1,2} ?#{words.day}?)"
+words.like_date = "(?:(?:#{words.numbers}|#{words.year_month_day}){1,12}#{words.year_month_day}#{words.numbers}{0,2})"
 words.weekdays = "(?:#{words.zero}|#{words.one}|#{words.two}|#{words.three}|#{words.four}|#{words.five}|#{words.six}|#{words.seven}|#{words.sun}|#{words.end})"
 words.weekExpression = "(?:#{words.this_previous_next}?#{words.week}#{words.weekdays})"
 words.dateExpression = "(?:#{words.like_date}|#{words.weekExpression}|#{words.today}|#{words.tomorrow}|#{words.acquired}|#{words.yesterday}|#{words.the_day_before_yesterday})"
@@ -179,13 +179,14 @@ dayTime2moment = (daytime, timezone, moment) ->
 
 date2object = (date) ->
   return null if not date
-  if match = date.match RegExp("(?:(?:(?:(#{words.numbers}+|#{words.this_previous_next}) ?#{words.year})? ?(#{words.numbers}+|#{words.separator}|#{words.this_previous_next}) ?#{words.month})? ?(?:(#{words.numbers}+) ?#{words.day}?))")
+  if match = date.match RegExp("(?:(?:(?:(#{words.numbers}{0,4}|#{words.this_previous_next}) ?#{words.year})? ?(#{words.numbers}{0,2}|#{words.separator}|#{words.this_previous_next}) ?#{words.month})? ?(?:(#{words.numbers}{0,2}) ?#{words.day}?))")
     now = Moment()
     year = number2integer(match[1]) or null
     if year and year < 100
       c = parseInt(now.year() / 100) * 100
       year = year + c
     month = number2integer(match[2]) or null
+    return null if month and month > 12
     day = number2integer(match[3])
 
     if match[1]?.match RegExp(words.this)
@@ -194,6 +195,7 @@ date2object = (date) ->
       year = now.year() - 1
     else if match[1]?.match RegExp(words.next)
       year = now.year() + 1
+    
     if match[2]?.match RegExp(words.this)
       month = now.month() + 1
     else if match[2]?.match RegExp(words.previous)
@@ -201,7 +203,7 @@ date2object = (date) ->
     else if match[2]?.match RegExp(words.next)
       month = now.month() + 2
 
-    return null if not month or month > 12
+    
     dayLimit = dayInMonth[month - 1]
     dayLimit += 1 if month == 2 and year % 4 == 0
     return null if not day or day > dayLimit
