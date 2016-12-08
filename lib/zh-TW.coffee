@@ -70,6 +70,8 @@ number2integer = (number) ->
   return null if not number
   if match = number.match RegExp("(#{words.zero_to_nine})(#{words.zero_to_nine})(#{words.zero_to_nine})(#{words.zero_to_nine})")
     return number2integer(match[1])*1000 + number2integer(match[2])*100 + number2integer(match[3])*10 + number2integer(match[4])
+  else if match = number.match RegExp("(#{words.zero_to_nine})(#{words.zero_to_nine})(#{words.zero_to_nine})")
+    return null
   else if match = number.match RegExp("(#{words.zero_to_nine})(#{words.ten})?(#{words.zero_to_nine})#{words.unit}?")
     n = number2integer(match[3])
     n = 0 if n >= 10
@@ -179,7 +181,7 @@ dayTime2moment = (daytime, timezone, moment) ->
 
 date2object = (date) ->
   return null if not date
-  if match = date.match RegExp("(?:(?:(?:(#{words.numbers}{0,4}|#{words.this_previous_next}) ?#{words.year})? ?(#{words.numbers}{0,2}|#{words.separator}|#{words.this_previous_next}) ?#{words.month})? ?(?:(#{words.numbers}{0,2}) ?#{words.day}?))")
+  if match = date.match RegExp("(?:(?:(?:(#{words.numbers}{0,4}|#{words.this_previous_next}) ?#{words.year})? ?(#{words.numbers}{0,3}|#{words.separator}|#{words.this_previous_next}) ?#{words.month})? ?(?:(#{words.numbers}{0,3}) ?#{words.day}?))")
     now = Moment()
     year = number2integer(match[1]) or null
     if year and year < 100
@@ -202,6 +204,7 @@ date2object = (date) ->
       month = now.month()
     else if match[2]?.match RegExp(words.next)
       month = now.month() + 2
+    return null if not month
 
     dayLimit = dayInMonth[month - 1]
     dayLimit += 1 if month == 2 and year % 4 == 0
@@ -305,6 +308,7 @@ expressions.push (text, timezone) ->
   if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(?:(#{words.dateExpression})) ?(#{words.dayTime}) ?(?:#{words.to} ?(#{words.dayTime}) ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.separator}?([^#{words.separators}]+))?$")
     moment = dateExpression2moment(match[2], timezone)
     moment = dayTime2moment(match[3], timezone, moment) if match[3]
+
     return null if !moment
     moment.endMoment = dayTime2moment(match[4], timezone, Moment(moment)) if match[4]
     location = match[5]

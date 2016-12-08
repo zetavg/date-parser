@@ -32,7 +32,7 @@ describe "dateParser_zh-TW", ->
 
     it "should not recognize 123/12", ->
       assert.equal(
-        dateParser.parse '12a/12'
+        dateParser.parse '123/12'
         null
       )
 
