@@ -57,17 +57,21 @@ words.time = "(?:#{words.numbers}+#{words.hour}(?:#{words.numbers}+)?(?:#{words.
 words.like_time = "(?:#{words.numbers}+(?:#{words.numbers}|#{words.hour}|#{words.minute}|#{words.second}){1,12})"
 words.dayTime = "(?:(?:#{words.dayPeriods}?#{words.separator}?#{words.like_time}) ?#{words.dayPeriods}?|#{words.dayPeriods})"
 words.year_month_day = "(?:#{words.year}|#{words.month}|#{words.day}|#{words.year_relative}|#{words.month_relative})"
-words.date = "(?:(?:(?:(?:#{words.numbers}{1,4}|#{words.this_previous_next}) ?#{words.year})? ?(?:#{words.numbers}{1,3}|#{words.this_previous_next}) ?#{words.month})? ?#{words.numbers}{1,3} ?#{words.day}?)"
-words.like_date = "(?:(?:#{words.numbers}|#{words.year_month_day}){1,12}#{words.year_month_day}#{words.numbers}{0,3})"
+words.date = "(?:(?:(?:(?:#{words.numbers}{1,4}|#{words.this_previous_next}) ?#{words.year})? ?(?:#{words.numbers}{1,2}|#{words.this_previous_next}) ?#{words.month})? ?#{words.numbers}{1,2} ?#{words.day}?)"
+words.like_date = "(?:(?:#{words.numbers}|#{words.year_month_day}){1,12}#{words.year_month_day}#{words.numbers}{0,2})"
 words.weekdays = "(?:#{words.zero}|#{words.one}|#{words.two}|#{words.three}|#{words.four}|#{words.five}|#{words.six}|#{words.seven}|#{words.sun}|#{words.end})"
 words.weekExpression = "(?:#{words.this_previous_next}?#{words.week}#{words.weekdays})"
 words.dateExpression = "(?:#{words.like_date}|#{words.weekExpression}|#{words.today}|#{words.tomorrow}|#{words.acquired}|#{words.yesterday}|#{words.the_day_before_yesterday})"
 words.separators = "(?:#{words.event_prefix}|#{words.event_postfix})"
 
+dayInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
 number2integer = (number) ->
   return null if not number
   if match = number.match RegExp("(#{words.zero_to_nine})(#{words.zero_to_nine})(#{words.zero_to_nine})(#{words.zero_to_nine})")
     return number2integer(match[1])*1000 + number2integer(match[2])*100 + number2integer(match[3])*10 + number2integer(match[4])
+  else if match = number.match RegExp("(#{words.zero_to_nine})(#{words.zero_to_nine})(#{words.zero_to_nine})")
+    return null
   else if match = number.match RegExp("(#{words.zero_to_nine})(#{words.ten})?(#{words.zero_to_nine})#{words.unit}?")
     n = number2integer(match[3])
     n = 0 if n >= 10
@@ -177,26 +181,35 @@ dayTime2moment = (daytime, timezone, moment) ->
 
 date2object = (date) ->
   return null if not date
-  if match = date.match RegExp("(?:(?:(?:(#{words.numbers}+|#{words.this_previous_next}) ?#{words.year})? ?(#{words.numbers}+|#{words.separator}|#{words.this_previous_next}) ?#{words.month})? ?(?:(#{words.numbers}+) ?#{words.day}?))")
+  if match = date.match RegExp("(?:(?:(?:(#{words.numbers}{0,4}|#{words.this_previous_next}) ?#{words.year})? ?(#{words.numbers}{0,3}|#{words.separator}|#{words.this_previous_next}) ?#{words.month})? ?(?:(#{words.numbers}{0,3}) ?#{words.day}?))")
     now = Moment()
     year = number2integer(match[1]) or null
     if year and year < 100
-      c = parseInt(now.year()/100)*100
+      c = parseInt(now.year() / 100) * 100
       year = year + c
     month = number2integer(match[2]) or null
-    day = number2integer(match[3]) or null
+    return null if month and month > 12
+    day = number2integer(match[3])
+
     if match[1]?.match RegExp(words.this)
       year = now.year()
     else if match[1]?.match RegExp(words.previous)
       year = now.year() - 1
     else if match[1]?.match RegExp(words.next)
       year = now.year() + 1
+
     if match[2]?.match RegExp(words.this)
-      year = now.month() + 1
+      month = now.month() + 1
     else if match[2]?.match RegExp(words.previous)
       month = now.month()
     else if match[2]?.match RegExp(words.next)
       month = now.month() + 2
+    return null if not month
+
+    dayLimit = dayInMonth[month - 1]
+    dayLimit += 1 if month == 2 and year % 4 == 0
+    return null if not day or day > dayLimit
+
     return {
       year: year,
       month: month,
@@ -233,6 +246,7 @@ dateExpression2moment = (dateExp, timezone) ->
     day = number2integer(match[2])
     if match[2].match RegExp(words.end)
       day = 6
+    moment.date moment.date() + 7 if day == 7
     day = 0 if day >= 7
     moment.day day
     if match[2].match RegExp(words.end)
@@ -268,8 +282,9 @@ expressions.push (text, timezone) ->
 # 「<事件> 日期 <時間> 到 日期 <時間> <在...> <事件>」
 expressions.push (text, timezone) ->
   if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dateExpression}) ?(#{words.dayTime})? ?(?:#{words.to} ?(#{words.dateExpression}) ?(#{words.dayTime})? ?) ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.separator}?([^#{words.separators}]+))?$")
-    moment = dateExpression2moment(match[2], timezone) or Moment().tz(timezone)
+    moment = dateExpression2moment(match[2], timezone)
     moment = dayTime2moment(match[3], timezone, moment) if match[3]
+    return null if !moment
     if not match[3] and not match[5]
       fullDay = true
     location = match[6]
@@ -291,8 +306,10 @@ expressions.push (text, timezone) ->
 # 「<事件> 日期 時間 <到 時間> <在...> <事件>」
 expressions.push (text, timezone) ->
   if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(?:(#{words.dateExpression})) ?(#{words.dayTime}) ?(?:#{words.to} ?(#{words.dayTime}) ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.separator}?([^#{words.separators}]+))?$")
-    moment = dateExpression2moment(match[2], timezone) or Moment().tz(timezone)
+    moment = dateExpression2moment(match[2], timezone)
     moment = dayTime2moment(match[3], timezone, moment) if match[3]
+
+    return null if !moment
     moment.endMoment = dayTime2moment(match[4], timezone, Moment(moment)) if match[4]
     location = match[5]
     eventName = match[1] or match[6]
@@ -306,6 +323,7 @@ expressions.push (text, timezone) ->
 expressions.push (text, timezone) ->
   if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dayTime}) ?(?:#{words.to} ?(#{words.dayTime}) ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.separator}?([^#{words.separators}]+))?$")
     moment = dayTime2moment(match[2], timezone) if match[2]
+    return null if !moment
     moment.endMoment = dayTime2moment(match[3], timezone)
     location = match[4]
     eventName = match[1] or match[5]
@@ -320,8 +338,9 @@ expressions.push (text, timezone) ->
   if match = text.match RegExp("^(?:([^#{words.separators}]+) ?#{words.event_postfix})? ?(#{words.dateExpression}) ?(#{words.dayTime})? ?(?:#{words.to} ? (#{words.dateExpression}) ?(#{words.dayTime})? ?)? ?(?:#{words.at} ?([^#{words.separators}]+))? ?(?:#{words.event_prefix}#{words.separator}?([^#{words.separators}]+))?$")
     location = match[6]
     eventName = match[1] or match[7]
-    moment = dateExpression2moment(match[2], timezone) or Moment().tz(timezone)
+    moment = dateExpression2moment(match[2], timezone)
     moment = dayTime2moment(match[3], timezone, moment) if match[3]
+    return null if !moment
     if not match[3] and not match[5]
       fullDay = true
     moment.endMoment = dateExpression2moment(match[5], timezone, moment.endMoment) if match[5]
